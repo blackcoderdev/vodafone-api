@@ -1,7 +1,6 @@
 import requests
 import json
 import time
-from datetime import datetime
 
 class VodafoneEgypt:
     def __init__(self):
@@ -9,7 +8,6 @@ class VodafoneEgypt:
         self.token = None
         self.msisdn = None
         self.session = requests.Session()
-        self.purchase_attempts = {}
         
     def login(self, username, password):
         url = f"{self.base_url}/auth/realms/vf-realm/protocol/openid-connect/token"
@@ -24,8 +22,7 @@ class VodafoneEgypt:
         
         headers = {
             'User-Agent': "okhttp/4.11.0",
-            'Accept': "application/json, text/plain, */*",
-            'Accept-Encoding': "gzip",
+            'Accept': "application/json",
             'silentLogin': "false",
             'x-agent-operatingsystem': "15",
             'clientId': "AnaVodafoneAndroid",
@@ -44,14 +41,9 @@ class VodafoneEgypt:
             if 'access_token' in data:
                 self.token = data['access_token']
                 self.msisdn = username
-                self.session.headers.update({
-                    'Authorization': f"Bearer {self.token}",
-                    'msisdn': self.msisdn,
-                })
                 return True, "تم تسجيل الدخول بنجاح"
             else:
                 return False, "فشل تسجيل الدخول"
-                
         except Exception as e:
             return False, str(e)
     
@@ -125,6 +117,5 @@ class VodafoneEgypt:
                 return False, "انتهت الجلسة، سجل دخول مرة أخرى"
             else:
                 return False, f"خطأ {response.status_code}"
-                
         except Exception as e:
             return False, str(e)
