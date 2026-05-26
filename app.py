@@ -5,14 +5,14 @@ from vodafone import VodafoneEgypt
 app = Flask(__name__)
 CORS(app)
 
-# تخزين الجلسات النشطة
+# تخزين الجلسات النشطة مؤقتاً
 sessions = {}
 
-@app.route('/', methods=['GET'])
+@app.route('/api', methods=['GET'])
 def home():
     return jsonify({
         'status': 'online',
-        'message': 'Vodafone API is running',
+        'message': 'Vodafone API is running on Railway',
         'endpoints': {
             'POST /api/login': 'تسجيل الدخول',
             'GET /api/cards': 'جلب الكروت المتاحة',
@@ -34,9 +34,7 @@ def login():
         success, message = vf.login(username, password)
         
         if success:
-            # حفظ الجلسة
-            session_id = username
-            sessions[session_id] = vf
+            sessions[username] = vf
             return jsonify({
                 'success': True,
                 'message': message,
@@ -45,14 +43,13 @@ def login():
             })
         else:
             return jsonify({'success': False, 'message': message})
-            
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
 
 @app.route('/api/cards', methods=['GET'])
 def get_cards():
     try:
-        # نبحث عن جلسة نشطة
+        # البحث عن جلسة نشطة
         for session_id, vf in sessions.items():
             if vf.token:
                 cards = vf.get_available_cards()
@@ -65,9 +62,7 @@ def get_cards():
                         'type': 'فكة' if 'Fakka' in card else 'مارد'
                     })
                 return jsonify({'success': True, 'cards': cards_list})
-        
         return jsonify({'success': False, 'message': 'لا توجد جلسة نشطة، سجل دخول أولاً'})
-        
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
 
@@ -81,7 +76,6 @@ def purchase():
         if not card_id:
             return jsonify({'success': False, 'message': 'الرجاء تحديد الكارت'})
         
-        # البحث عن الجلسة
         if msisdn and msisdn in sessions:
             vf = sessions[msisdn]
         else:
@@ -94,7 +88,6 @@ def purchase():
         
         success, message = vf.purchase_card(card_id)
         return jsonify({'success': success, 'message': message})
-        
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
 
